@@ -45,6 +45,6 @@ RUN wget https://github.com/opencv/opencv/archive/3.2.0.zip \
   -DPYTHON_EXECUTABLE=$(which python3.6) \
   -DPYTHON_INCLUDE_DIR=$(python3.6 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
   -DPYTHON_PACKAGES_PATH=$(python3.6 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") .. \
-&& make install -j4\
+&& make -j4 install\
 && rm /3.2.0.zip \
 && rm -r /opencv-3.2.0
