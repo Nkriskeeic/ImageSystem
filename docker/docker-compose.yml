@@ -1,0 +1,13 @@
+version: "2"
+services:
+  app:
+    container_name: image_system
+    build: ./
+    ports:
+      - '3030:3030'
+    networks:
+      - default
+    volumes:
+      - ../:/usr/src/app
+    command: []
+    tty: true
