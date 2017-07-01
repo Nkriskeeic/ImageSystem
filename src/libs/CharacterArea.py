@@ -1,6 +1,7 @@
 import cv2
+import numpy as np
 
-class Rectangle:
+class CharacterArea:
     def _findObject(self, mask, th_area):
         _, contours, _ = cv2.findContours(mask,
                                                       cv2.RETR_EXTERNAL,
@@ -19,7 +20,7 @@ class Rectangle:
             if len(approx) < 4:
                 continue
             approxes.append(approx)
-        return approxes
+        return np.array(approxes, np.int32)
 
     def getRectByPoints(self, points):
         # prepare simple array
@@ -39,3 +40,6 @@ class Rectangle:
 
     def getPartImageByRect(self, image, rect):
         return image[rect[0]:rect[1], rect[2]:rect[3]]
+
+    def centers(self, contours):
+        return contours. mean(axis=1)
