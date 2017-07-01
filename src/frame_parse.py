@@ -15,21 +15,39 @@ if __name__ == '__main__':
     CARD_SIZE = [480, 360]
     PTS_DST = np.array([[[CARD_SIZE[0], 0]], [[0, 0]], [[0, CARD_SIZE[1]]], [[CARD_SIZE[0], CARD_SIZE[1]]]])
 
-    frame = cv2.imread(IMAGE_DIR + '/test.jpg', cv2.IMREAD_COLOR)
-    hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    hash_list = np.array([])
+    prev_answers = []
 
-    mask = cv2.inRange(hsv_frame, LOWER_GREEN, UPPER_GREEN)
-    blur_mask = cv2.GaussianBlur(mask, ksize=(5, 5), sigmaX=2)
-    green_frame = cv2.bitwise_and(frame, frame, mask=blur_mask)
+    # ここから各フレームを読み込み始める
+    # 将来的にはここはwhile True:に置き換わる
+    for _ in range(10):
+        frame = cv2.imread(IMAGE_DIR + '/test.jpg', cv2.IMREAD_COLOR)
+        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-    th_area = frame.shape[0] * frame.shape[1] / 100
+        mask = cv2.inRange(hsv_frame, LOWER_GREEN, UPPER_GREEN)
+        blur_mask = cv2.GaussianBlur(mask, ksize=(5, 5), sigmaX=2)
+        # green_frame = cv2.bitwise_and(frame, frame, mask=blur_mask)
 
-    ca = CharacterArea()
-    areas = ca.find(blur_mask, th_area)
-    area_centers = ca.centers(areas)
-    bounding_boxes = ca.getBoundingBoxByPoints(areas)
-    for area, bounding_box in zip(areas, bounding_boxes):
-        bb_image = ca.getPartImageByRect(frame, bounding_box)
-        area_in_bb = ca.getAreaInBoundingBox(area, bounding_box)
-        h, _ = cv2.findHomography(area_in_bb, PTS_DST)
-        warped_character_area = cv2.warpPerspective(bb_image, h, (CARD_SIZE[0], CARD_SIZE[1]))
+        th_area = frame.shape[0] * frame.shape[1] / 100
+
+        ca = CharacterArea()
+        areas = ca.find(blur_mask, th_area)
+        area_centers = ca.centers(areas)
+        answers = []
+
+        # 全てのareaについて文字列化を試みる
+        for area, center in zip(areas, area_centers):
+            # hashから探し出す
+            answer = ca.searchInHash(center, hash_list, prev_answers)
+            if answer:
+                answers.append(answer)
+            else:
+                h, _ = cv2.findHomography(area, PTS_DST)
+                warped_character_area = cv2.warpPerspective(frame, h, (CARD_SIZE[0], CARD_SIZE[1]))
+                # TODO OCRで答えを得る．もし有効な答えを得られなければanswersにはFalseを代入する
+                answers.append('apple')
+        # この時点で全てのareaについてanswersに文字かFalseが代入されているので描画すればよい
+        # TODO 描画処理
+
+        prev_answers = answers
+        hash_list = ca.setHash(area_centers)
