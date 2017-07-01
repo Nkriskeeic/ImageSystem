@@ -3,6 +3,9 @@ from os import path as op
 import numpy as np
 from libs.CharacterArea import CharacterArea
 
+def distance(p1, p2):
+    return np.abs(np.subtract(p1, p2)).sum()
+
 if __name__ == '__main__':
     # 定義
     IMAGE_DIR = op.normpath(
@@ -12,8 +15,11 @@ if __name__ == '__main__':
     # chimpanzee = cv2.imread(IMAGE_DIR + '/chimpanzee.png', cv2.IMREAD_ANYCOLOR)
     LOWER_GREEN = np.array([30, 30, 30])
     UPPER_GREEN = np.array([90, 255, 255])
-    CARD_SIZE = [480, 360]
-    PTS_DST = np.array([[[CARD_SIZE[0], 0]], [[0, 0]], [[0, CARD_SIZE[1]]], [[CARD_SIZE[0], CARD_SIZE[1]]]])
+    CARD_WIDTH = 480
+    CARD_HEIGHT = 360
+    PTS_DST_LITTLE = np.array([[0, 0], [CARD_WIDTH, 0], [0, CARD_HEIGHT], [CARD_WIDTH, CARD_HEIGHT]])
+    PTS_DST_LEFT = np.array([[0, CARD_HEIGHT], [0, 0],  [CARD_WIDTH, CARD_HEIGHT], [CARD_WIDTH, 0]])
+    PTS_DST_RIGHT = np.array([[CARD_WIDTH, 0], [CARD_WIDTH, CARD_HEIGHT], [0, 0], [0, CARD_HEIGHT] ])
 
     hash_list = np.array([])
     prev_answers = []
@@ -42,8 +48,16 @@ if __name__ == '__main__':
             if answer:
                 answers.append(answer)
             else:
-                h, _ = cv2.findHomography(area, PTS_DST)
-                warped_character_area = cv2.warpPerspective(frame, h, (CARD_SIZE[0], CARD_SIZE[1]))
+                # sortする必要ないかも？
+                area = ca.sort_area(area)
+                if distance(area[0], area[1]) > distance(area[0], area[2]):
+                    pts_dts = PTS_DST_LITTLE
+                elif area[0][1] < area[1][1]:
+                    pts_dts = PTS_DST_RIGHT
+                else:
+                    pts_dts = PTS_DST_LEFT
+                h, _ = cv2.findHomography(area, pts_dts)
+                warped_character_area = cv2.warpPerspective(frame, h, (CARD_WIDTH, CARD_HEIGHT))
                 # TODO OCRで答えを得る．もし有効な答えを得られなければanswersにはFalseを代入する
                 answers.append('apple')
         # この時点で全てのareaについてanswersに文字かFalseが代入されているので描画すればよい

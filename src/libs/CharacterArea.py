@@ -26,13 +26,15 @@ class CharacterArea:
             approxes.append(approx)
         return np.array(approxes, np.int32)
 
-    def getBoundingBoxByPoints(self, contour):
-        points = list(map(lambda x: x[0], contour))
+    def sort_area(self, area):
+        points = np.reshape(area, (-1, 2))
         points = sorted(points, key=lambda x: x[1])
         top_points = sorted(points[:2], key=lambda x: x[0])
         bottom_points = sorted(points[2:4], key=lambda x: x[0])
-        points = top_points + bottom_points
+        return np.array(top_points + bottom_points)
 
+    def getBoundingBoxByPoints(self, sort_area):
+        points = sort_area.reshape((-1, 2))
         left = min(points[0][0], points[2][0])
         right = max(points[1][0], points[3][0])
         top = min(points[0][1], points[1][1])
