@@ -22,24 +22,27 @@ class CharacterArea:
             approxes.append(approx)
         return np.array(approxes, np.int32)
 
-    def getRectByPoints(self, points):
-        # prepare simple array
-        points = list(map(lambda x: x[0], points))
+    def getBoundingBoxByPoints(self, contours):
+        bounding_boxes = []
+        for contour in contours:
+            points = list(map(lambda x: x[0], contour))
+            points = sorted(points, key=lambda x: x[1])
+            top_points = sorted(points[:2], key=lambda x: x[0])
+            bottom_points = sorted(points[2:4], key=lambda x: x[0])
+            points = top_points + bottom_points
 
-        points = sorted(points, key=lambda x: x[1])
-        top_points = sorted(points[:2], key=lambda x: x[0])
-        bottom_points = sorted(points[2:4], key=lambda x: x[0])
-        points = top_points + bottom_points
-
-        left = min(points[0][0], points[2][0])
-        right = max(points[1][0], points[3][0])
-        top = min(points[0][1], points[1][1])
-        bottom = max(points[2][1], points[3][1])
-        return (top, bottom, left, right)
-
+            left = min(points[0][0], points[2][0])
+            right = max(points[1][0], points[3][0])
+            top = min(points[0][1], points[1][1])
+            bottom = max(points[2][1], points[3][1])
+            bounding_boxes.append([(left, top), (right, bottom)])
+        return bounding_boxes
 
     def getPartImageByRect(self, image, rect):
-        return image[rect[0]:rect[1], rect[2]:rect[3]]
+        return image[rect[0][1]:rect[1][1], rect[0][0]:rect[1][0]]
 
     def centers(self, contours):
         return contours. mean(axis=1)
+
+    def getAreaInBoundingBox(self, area, bounding_box):
+        return np.subtract(area, bounding_box[0])
