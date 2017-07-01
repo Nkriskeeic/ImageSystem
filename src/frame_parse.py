@@ -24,5 +24,12 @@ if __name__ == '__main__':
 
     th_area = frame.shape[0] * frame.shape[1] / 100
 
-    rectangle = Rectangle()
-    areas = rectangle.find(blur_mask, th_area)
+    ca = CharacterArea()
+    areas = ca.find(blur_mask, th_area)
+    area_centers = ca.centers(areas)
+    bounding_boxes = ca.getBoundingBoxByPoints(areas)
+    for area, bounding_box in zip(areas, bounding_boxes):
+        bb_image = ca.getPartImageByRect(frame, bounding_box)
+        area_in_bb = ca.getAreaInBoundingBox(area, bounding_box)
+        h, _ = cv2.findHomography(area_in_bb, PTS_DST)
+        warped_character_area = cv2.warpPerspective(bb_image, h, (CARD_SIZE[0], CARD_SIZE[1]))
