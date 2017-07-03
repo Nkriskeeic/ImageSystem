@@ -3,8 +3,8 @@ import numpy as np
 
 class CharacterArea:
     def __init__(self):
-        # 中心間のマハラノビス距離が10px以内ならOCR処理を行わない
-        self.HASH_DISTANCE_ERROR = 10
+        # 中心間のマハラノビス距離が30px以内ならOCR処理を行わない
+        self.HASH_DISTANCE_ERROR = 30
 
     def _findObject(self, mask, th_area):
         _, contours, _ = cv2.findContours(mask,
@@ -21,7 +21,7 @@ class CharacterArea:
         for (i, cnt) in enumerate(contours_large):
             arclen = cv2.arcLength(cnt, True)
             approx = cv2.approxPolyDP(cnt, 0.02 * arclen, True)
-            if len(approx) < 4:
+            if len(approx) < 4 or approx.shape != (4,1,2):
                 continue
             approxes.append(approx)
         return np.array(approxes, np.int32)
@@ -60,7 +60,7 @@ class CharacterArea:
         # hash計算
         distances = np.abs(np.subtract(hash_keys, needle)).sum(axis=1)
         find_index = np.where(distances < self.HASH_DISTANCE_ERROR)
-        if len(find_index) != 1:
+        if len(find_index) != 1 or len(answers) == 0 or len(answers) <= find_index[0][0]:
             return False
         else:
             return answers[find_index[0][0]]
